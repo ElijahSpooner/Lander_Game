@@ -1,0 +1,1418 @@
+"
+from tkinter import*
+from math import*
+from time import*
+from random import*
+
+X_MAX = 1024
+Y_MAX = 768
+Pi = 3.14159265
+global meteor_color
+global debug_mode
+global game_level
+global game_difficulty
+global bullet_friendliness
+global max_players
+global max_bullets
+global n_meteors
+global n_bullets
+global radius_max
+global radius_min
+global score
+global ai_level
+game_difficulty = 2
+debug_mode = False
+#start of menu
+item_name = []
+item_price = []
+ai_level = []
+ai_level.append(-1)
+TAX_RATE = 0.06
+quit_game = False
+game_level_select = 1
+
+#--------------------Menus--------------------
+def level_menu(menu_title, menu_items, menu_prices):
+    global game_level_select
+    running_sub = True
+    while(running_sub):
+        menu_item_i = 0
+        print(menu_title)
+        print("_________")
+        print("Type A Level To Start With.")
+        game_level_select = int(input("> "))
+        running_sub = False
+    
+def sub_menu(menu_title, menu_items, menu_prices):
+    running_sub = True
+    while(running_sub):
+        menu_item_i = 0
+        print(menu_title)
+        print("_________")
+        for menu_item in menu_items:
+            menu_item_i = menu_item_i + 1
+            print(str(menu_item_i) + ") " + menu_item)
+        print(str(menu_item_i + 1) + ") Back")
+        menu_item_max = menu_item_i
+        answer_int = int(input("> "))
+        if answer_int <= menu_item_max:
+            #print(menu_items[answer_int-1])
+            print ("Submenu Answer Int: " + str(answer_int))
+            return answer_int
+        elif answer_int == menu_item_max + 1:
+            return 0
+    
+def display_resolution_options():
+    global X_MAX
+    global Y_MAX
+    menu_title = "Resolution Options"
+    menu_items = ["1920x1080",
+                  "1600x900",
+                  "1024x768",
+                  "1366x720",
+                  "640x480"]
+    menu_prices = [1,
+                   2,
+                   3,
+                   4,
+                   5]
+    res_choice = sub_menu(menu_title, menu_items, menu_prices)
+    if res_choice == 1:
+        X_MAX = 1920
+        Y_MAX = 1080
+    if res_choice == 2:
+        X_MAX = 1600
+        Y_MAX = 900
+    if res_choice == 3:
+        X_MAX = 1024
+        Y_MAX = 768
+    if res_choice == 4:
+        X_MAX = 1366
+        Y_MAX = 720
+    if res_choice == 5:
+        X_MAX = 640
+        Y_MAX = 480
+    return res_choice
+    
+
+def display_player_options():
+    global max_players
+    menu_title = "Player Options"
+    menu_items = ["1 Player",
+                  "2 Players",
+                  "3 Players",
+                  "4 Players"]
+    menu_prices = [1,
+                   2,
+                   3,
+                   4]
+    max_players = sub_menu(menu_title, menu_items, menu_prices)
+    return max_players
+
+def display_ai_options(player_i):
+    menu_title = "AI Options for Player " + str(player_i + 1)
+    menu_items = ["Not AI",
+                  "AI Level 0",
+                  "AI Level 1",
+                  "AI Level 2",
+                  "AI Level 3"]
+    menu_prices = [1,
+                   2,
+                   3,
+                   4,
+                   5]
+    return sub_menu(menu_title, menu_items, menu_prices)
+    
+def display_game_options():
+    menu_title = "Bullet Friendliness"
+    menu_items = ["Kill Everything",
+                  "Self Preservation",
+                  "All Landers Safe",
+                  "Meteors Beware"]
+    menu_prices = [1,
+                   2,
+                   3,
+                   4]
+                
+    return sub_menu(menu_title, menu_items, menu_prices)
+
+def display_difficulty():
+    global game_difficulty
+    menu_title = "Difficulty"
+    menu_items = ["Easy",
+                  "Medium",
+                  "Hard",
+                  "Impossible",
+                  "Apocalypse"]
+    menu_prices = [1,
+                   2,
+                   3,
+                   4,
+                   5,]
+    game_difficulty = sub_menu(menu_title, menu_items, menu_prices)    
+    return game_difficulty
+
+def display_level_select():
+    menu_title = "Level Select"
+    menu_items = ["Type Your Level To Start With."]
+    menu_prices = 0
+    return level_menu(menu_title, menu_items, menu_prices)
+        
+def display_menu(menu_title, menu_items):
+    global max_players
+    global ai_level
+    global bullet_friendliness
+    global powerups
+    global game_difficulty
+    ai_level = []
+    for player_i in range(0, max_players):
+        ai_level.append(-1)
+    running=True
+    while(running):
+        player_options_str = "Player Options: " + str(max_players) + " player(s)"
+
+        ai_options_str = "AI Options"
+        for player_i in range(0, max_players):
+            if (ai_level[player_i] >= 0):
+                ai_options_str = ai_options_str + " P" + str(player_i + 1) + ": " + str(ai_level[player_i]) + " "
+            else:
+                ai_options_str = ai_options_str + " P" + str(player_i + 1) + ": " + "Not AI" + " "
+
+        level_select_str = "Level Select"
+        game_options_str = "Game Options"
+        difficulty_str = "Difficulty"
+        menu_items = ["Quit Game",
+                      player_options_str,
+                      ai_options_str,
+                      game_options_str,
+                      difficulty_str,
+                      level_select_str,
+                      "Display Resolution Options"]
+        menu_item_i = -1
+        print(menu_title)
+        print("_________")
+        for menu_item in menu_items:
+            menu_item_i = menu_item_i + 1
+            print(str(menu_item_i) +") "+ menu_item)
+        print(str(menu_item_i + 1) + ") Play Game")
+        menu_item_max = menu_item_i
+        answer_int = int(input("> "))
+        if answer_int <= menu_item_max:
+            if answer_int == 0:
+                quit_game = True
+                exit()
+            elif answer_int == 1:
+                max_players = display_player_options()
+                ai_level = []
+                for player_i in range(0, max_players):
+                    ai_level.append(-1)
+                
+            elif answer_int == 2:
+                ai_level = []
+                for player_i in range(0, max_players):
+                    ai_level.append(display_ai_options(player_i) - 2)
+
+            elif answer_int == 3:
+                game_options = display_game_options()
+            elif answer_int == 4:
+                game_difficulty = display_difficulty()
+            elif answer_int == 5:
+                level_options = display_level_select()
+            elif answer_int == 6:
+                res_options = display_resolution_options()
+            else:
+                print("Error: Option does not exist")
+        elif answer_int == menu_item_max + 1:
+            running = False
+            
+            if game_difficulty == 1: #Easy
+                bullet_friendliness = 4 #Bullet will only kill meteors not powerups or self
+                powerups = True
+            if game_difficulty == 2: #Medium
+                bullet_friendliness = 3 #bullets will kill all meteors including powerups
+                powerups = True
+            if game_difficulty == 3: #Hard
+                bullet_friendliness = 2 #bullets will kill all meteors including powerups and self
+                powerups = True
+            if game_difficulty == 4: #Impossible
+                bullet_friendliness = 1 #bullets will kill all meteors including powerups and self
+                powerups = False #no powerups
+                
+            if game_difficulty == 5: #Apocalypse
+                bullet_friendliness = 1 #bullets will kill all meteors including powerups and self
+                powerups = False #no powerups
+                #meteors * 2
+            debug_mode = True
+            print("Playing Game...")
+            return True
+    return False
+
+#--------------------Start of Program--------------------
+
+#player options
+max_players = 1
+#game options
+game_level = 0
+n_meteors = 0
+n_bullets = 0
+radius_max = 50
+radius_min = 10
+
+while not(quit_game):
+    play_game = False
+    while not(play_game):
+        menu_title = "Main Menu"
+
+        player_options_str = "Player Options: " + str(max_players) + " player(s)"
+
+        ai_options_str = "AI Options"
+        for player_i in range(0, max_players):
+            ai_options_str = ai_options_str + " P" + str(player_i + 1) + ": " + str(ai_level[player_i]) + " "
+
+        game_options_str = "Game Options"
+        difficulty_str = "Difficulty"
+        menu_items = ["Quit Game",
+                      player_options_str,
+                      ai_options_str,
+                      game_options_str,
+                      difficulty_str]
+        play_game = display_menu(menu_title, menu_items)
+        
+    #end of menu
+
+
+    meteor_color = ["white", "yellow", "blue", "red", "green", "purple", "orange", "pink", "brown"]
+    max_meteors= 4 + game_level
+    score = 0
+
+#--------------------Lander--------------------
+
+    class Lander:
+        def __init__(self, number, ai_level, xinit, yinit, thetainit, vxinit, vyinit, radius):
+            
+            self.ai_level = ai_level
+            self.ai_move_dir = 0
+            self.ai_move_countdown = 0
+            self.ai_thrust_countdown = 0
+            self.ai_fire_bullet_countdown = 0
+            self.bullet_level = 1
+            self.bullet_powerup = 0
+            self.n_bullets = 0
+            self.luck = 0
+            self.next_life_points = 0
+            self.poly_dup_x_left = 0
+            self.poly_dup_x_right = 0
+            self.poly_dup_y_up = 0
+            self.poly_dup_y_down = 0
+            self.shield_dup_x_left = 0
+            self.shield_dup_x_right = 0
+            self.shield_dup_y_up = 0
+            self.shield_dup_y_down = 0
+            self.number = number
+            self.score = 0
+            self.max_bullets = 3
+            self.lives = 5
+            self.spawn_protection_timer = 1200
+            
+            if game_difficulty == 1: #Easy
+                self.lives = 5 #lives = 5
+                self.max_bullets = 5 #bullets = 5
+                self.spawn_protection_timer = 1500
+                
+            if game_difficulty == 2: #Medium
+                self.lives = 3 #lives = 3
+                self.max_bullets = 3 #bullets = 3
+                self.spawn_protection_timer = 1200
+                
+            if game_difficulty == 3: #Hard
+                self.lives = 2 #lives = 2
+                self.max_bullets = 2 #bullets = 2
+                self.spawn_protection_timer = 900
+                
+            if game_difficulty == 4: #Impossible
+                self.lives = 1 #lives = 1
+                self.max_bullets = 1 #bullets = 1
+                self.spawn_protection_timer = 300
+                
+            if game_difficulty == 5: #Apocalypse
+                self.lives = 1 #lives = 1
+                self.max_bullets = 1 #bullets = 1
+                self.spawn_protection_timer = 300
+                
+            self.shield = 0
+            self.on = True
+            self.xinit = xinit
+            self.yinit = yinit
+            self.x = xinit
+            self.y = yinit
+            self.theta = thetainit
+            self.vx = vxinit
+            self.vy = vyinit
+            self.radius = radius
+            self.deltatheta = 0
+            self.thrust = 0
+            self.flamex1 = 0
+            self.flamey1 = 0
+            self.flamex2 = 0
+            self.flamey2 = 0
+            coords = [-40, 0, 40, 0, 55, -15, 55, -35, 25, -60, -25, -60, -55, -35, -55, -15, -40, 0, -60, 7, -60, 25, -30, 33, -25, 33, -30, 58, -25, 58, -25,58,-25, 63, -40, 63, -40, 58, -35, 58, -30, 33, 5, 33, 14, 48, -14, 48, -5, 33, 30, 33, 35, 58, 40, 58, 40, 63, 25, 63, 25, 58, 30, 58, 25, 33, 30, 33, 60, 25, 60, 7, 40, 0]
+            self.poly = c.create_polygon(coords, outline = "#804040", fill = "#000000", width = 1)
+            self.flame = c.create_line(1, 1, 2, 2, fill = "black")
+            self.xy = []
+            self.rt = []
+            for i in range(0, len(coords), 2):
+                x = coords[i]
+                y = coords[i+1]
+                r = sqrt(x**2 + y**2) * self.radius / 64
+                t = atan2(y, x)
+                self.rt.append(r)
+                self.rt.append(t)
+        def extra_life(self):
+            self.lives = self.lives + 1
+        def dies(self):
+            self.on = False
+            c.delete(self.poly)
+            c.delete(self.flame)
+            self.lives = self.lives - 1
+#            score_tables[self.number].draw(self.number, self.score, self.lives, self.spawn_protection_timer) 
+            score_tables[self.number].draw(self.number, self) 
+            if self.lives > 0:
+                self.reset()
+            else:
+                self.lives = 0
+                score_tables[self.number].draw(self.number, self)
+        def difficulty_bullet_check(self):
+            if game_difficulty == 1:
+                self.max_bullets = (self.bullet_level + 4) * (self.bullet_powerup * 2 + 1)
+            if game_difficulty == 2:
+                self.max_bullets = (self.bullet_level + 2) * (self.bullet_powerup * 2 + 1)
+            if game_difficulty == 3:
+                self.max_bullets = (self.bullet_level + 1) * (self.bullet_powerup * 2 + 1)
+            if game_difficulty >= 4:
+                self.max_bullets = (self.bullet_level + 0) * (self.bullet_powerup * 2 + 1)    
+        def reset(self):    
+            self.spawn_protection_timer = 1500
+            self.x = self.xinit
+            self.y = self.yinit
+            self.theta = 0
+            self.vx = 0
+            self.vy = 0  
+            self.on = True
+            if self.bullet_powerup > 0:
+                self.bullet_powerup -= 1
+            else:
+                if self.bullet_level > 1:
+                    self.bullet_level -= 1
+            if game_difficulty >= 3:
+                self.bullet_powerup = 0
+                self.bullet_level = 1
+                self.difficulty_bullet_check()
+                self.move(self.number)
+                self.draw()
+        
+        def draw(self):
+            self.xy =[]
+            for i in range(0, len(self.rt), 2):
+                r = self.rt[i]
+                t = self.rt[i+1]
+                self.xy.append(self.x + r*cos(t + self.theta))
+                self.xy.append(self.y + r*sin(t+ self.theta))
+            c.delete(self.poly)
+            c.delete(self.shield)
+            c.delete(self.poly_dup_x_left)
+            c.delete(self.poly_dup_x_right)
+            c.delete(self.poly_dup_y_up)
+            c.delete(self.poly_dup_y_down)
+            c.delete(self.shield_dup_x_left)
+            c.delete(self.shield_dup_x_right)
+            c.delete(self.shield_dup_y_up)
+            c.delete(self.shield_dup_y_down)
+            self.poly = c.create_polygon(self.xy, outline = meteor_color[self.number], fill = "#000000", width = 2)
+            lander_x_left = self.x - self.radius
+            lander_x_right = self.x + self.radius
+            lander_y_up = self.y - self.radius
+            lander_y_down = self.y + self.radius
+            if lander_x_left < 0:
+                self.poly_dup_x_left = c.create_oval((X_MAX + lander_x_left + self.radius) - self.radius,self.y - self.radius,(X_MAX + lander_x_left + self.radius) + self.radius, self.y + self.radius, outline = meteor_color[self.number], fill = "black", width = 2)
+                if self.spawn_protection_timer > 0:
+                    self.shield_dup_x_left = c.create_oval((X_MAX + lander_x_left + self.radius) - self.radius - 10,self.y - self.radius - 10,(X_MAX + lander_x_left + self.radius) + self.radius + 10, self.y + self.radius + 10, outline = "Blue", fill = "black", width = 2)
+            if lander_x_right > X_MAX:
+                self.poly_dup_x_right = c.create_oval((0 + lander_x_right - X_MAX - self.radius) - self.radius, self.y - self.radius,(0 + lander_x_right - X_MAX - self.radius) + self.radius,self.y + self.radius, outline = meteor_color[self.number], fill = "black", width = 2)
+                if self.spawn_protection_timer > 0:
+                    self.shield_dup_x_right = c.create_oval((0 + lander_x_right - X_MAX - self.radius) - self.radius - 10,self.y - self.radius - 10,(0 + lander_x_right - X_MAX - self.radius) + self.radius + 10,self.y + self.radius + 10, outline = "Blue", fill = "black", width = 2)
+            if lander_y_up < 0:
+                self.poly_dup_y_up = c.create_oval(self.x - self.radius,(Y_MAX + lander_y_up + self.radius) - self.radius,self.x + self.radius,(Y_MAX + lander_y_up + self.radius) + self.radius, outline = meteor_color[self.number], fill = "black", width = 2)
+                if self.spawn_protection_timer > 0:
+                    self.shield_dup_y_up = c.create_oval(self.x - self.radius - 10,(Y_MAX + lander_y_up + self.radius) - self.radius - 10,self.x + self.radius + 10,(Y_MAX + lander_y_up + self.radius) + self.radius + 10, outline = "Blue", fill = "black", width = 2)
+            if lander_y_down > Y_MAX:
+                self.poly_dup_y_down = c.create_oval(self.x - self.radius,(0 + lander_y_down - Y_MAX - self.radius) - self.radius,self.x + self.radius,(0 + lander_y_down - Y_MAX - self.radius) + self.radius, outline = meteor_color[self.number], fill = "black", width = 2)
+                if self.spawn_protection_timer > 0:
+                    self.shield_dup_y_down = c.create_oval(self.x - self.radius - 10,(0 + lander_y_down - Y_MAX - self.radius) - self.radius - 10,self.x + self.radius + 10,(0 + lander_y_down - Y_MAX - self.radius) + self.radius + 10, outline = "Blue", fill = "black", width = 2)
+            if self.spawn_protection_timer > 0:
+                #self.shield = c.create_polygon(self.xy, outline = "yellow", width = 2)
+                self.shield = c.create_oval(self.x - (self.radius + 10),self.y - (self.radius + 10),self.x + (self.radius + 10),self.y + (self.radius + 10), outline = "#0000FF", width = 2)
+        def ai(self):
+            self.ai_move_countdown -= 1
+            self.ai_thrust_countdown -= 1
+            self.ai_fire_bullet_countdown -= 1
+            if self.ai_thrust_countdown <= 0:
+                self.thrust_off()
+                    
+            # AI level 0 - random turning and firing, no moving
+            if (self.ai_level == 0):
+                if (self.ai_move_countdown <= 0):
+                    self.ai_move_dir = randint(-1, 1)
+                    self.ai_move_countdown = randint(1, 200)
+                else:
+                    if (self.ai_move_dir == -1):
+                        #turn_left(self.number)
+                        self.rotate_left()
+                    if (self.ai_move_dir == 0):
+                        #stop_turn(self.number)
+                        self.rotate_stop()
+                    if (self.ai_move_dir == 1):
+                        #turn_right(self.number)
+                        self.rotate_right()
+                if (self.ai_fire_bullet_countdown <= 0):
+                    fire_bullet(self.number)
+                    self.ai_fire_bullet_countdown = randint(50, 400)
+            # AI level 1 - tracks closest meteor and fires on it, no moving
+            if (self.ai_level >= 1):
+                shortest_distance = 200
+                closest_meteor_num = -1
+                shortest_meteor_distance = shortest_distance
+                for meteor in meteors:
+                    if meteor.on:
+                        meteor_distance = sqrt((meteor.x - self.x)**2 + (meteor.y - self.y)**2)
+                        if (meteor_distance <= shortest_meteor_distance):
+                            shortest_meteor_distance = meteor_distance
+                            closest_meteor_num = meteor.number
+
+
+                closest_lander_num = -1
+                shortest_lander_distance = shortest_distance
+                if bullet_friendliness <= 2:
+                    for lander in landers:
+                        if (lander.on) and (lander.number != self.number):
+                            lander_distance = sqrt((lander.x - self.x)**2 + (lander.y - self.y)**2)
+                            if (lander_distance <= shortest_lander_distance):
+                                shortest_lander_distance = lander_distance
+                                closest_lander_num = lander.number
+
+                # if lander is pointing at closest meteor then fire
+                if (closest_meteor_num >= 0) and (shortest_meteor_distance <= shortest_lander_distance):
+
+                    quadrant = 0
+                    if meteors[closest_meteor_num].y < self.y and meteors[closest_meteor_num].x > self.x:
+                        quadrant = 1
+                    if meteors[closest_meteor_num].y < self.y and meteors[closest_meteor_num].x < self.x:
+                        quadrant = 2
+                    if meteors[closest_meteor_num].y > self.y and meteors[closest_meteor_num].x < self.x:
+                        quadrant = 3
+                    if meteors[closest_meteor_num].y > self.y and meteors[closest_meteor_num].x > self.x:
+                        quadrant = 4
+                    meteor_angle = 0
+                    if abs(meteors[closest_meteor_num].x - self.x) != 0:
+                        meteor_angle = atan(abs((meteors[closest_meteor_num].y - self.y)) / abs((meteors[closest_meteor_num].x - self.x))) * (180 / Pi)
+                    meteor_actual_angle = 0
+                    lander_actual_angle = ((self.theta * (180 / Pi)) -90)%360
+                    if quadrant == 4:
+                        meteor_actual_angle = meteor_angle
+                    if quadrant == 3:
+                        meteor_actual_angle = 90 + (90 - meteor_angle)
+                    if quadrant == 2:
+                        meteor_actual_angle = meteor_angle + 180
+                    if quadrant == 1:
+                        meteor_actual_angle = 270 + (90 - meteor_angle)
+                    #print("lander angle=" + str(lander_actual_angle) + ", meteor angle=" + str(meteor_actual_angle))
+
+                    if (meteor_actual_angle > lander_actual_angle):
+                        turn_result = (meteor_actual_angle - lander_actual_angle)
+                    if (meteor_actual_angle < lander_actual_angle):
+                        turn_result = ((meteor_actual_angle + 360) - lander_actual_angle)
+                    
+                    if (turn_result > 180):
+                        self.rotate_left()
+                    if (turn_result < 180):
+                        self.rotate_right()
+                        
+                    angle_fudge = self.ai_level  # set at 1/360 off on either side
+                    if (lander_actual_angle >= (meteor_actual_angle - angle_fudge)):
+                        if (lander_actual_angle <= (meteor_actual_angle + angle_fudge)):
+                            if self.ai_thrust_countdown <= 0:
+                                if (self.ai_level >= 2) and (meteors[closest_meteor_num].type >= 2 and meteors[closest_meteor_num].type <= 7):
+                                    #move to pick up special
+                                    self.thrust_on()
+                                    self.ai_thrust_countdown = randint(50, 200)
+                            
+                            if (self.ai_fire_bullet_countdown <= 0) and ((self.ai_level <= 1) or ((self.ai_level >= 2) and (meteors[closest_meteor_num].type <= 1 or meteors[closest_meteor_num].type >= 8))):
+                                self.ai_move_dir = 0
+                                self.rotate_stop()    
+                                fire_bullet(self.number)
+                                self.ai_fire_bullet_countdown = randint(100, 300)
+                
+                    # keep turning lander to point at closest meteor
+                    #if (self.ai_move_countdown <= 0):
+                        #if ((self.ai_move_dir == 0) and (turn_result > 0)):
+                            #self.ai_move_dir = -1
+                        #if ((self.ai_move_dir == 0) and (theta_result < 0)):
+                            #self.ai_move_dir = 1
+                        #self.ai_move_countdown = 100
+                    #if (self.ai_move_dir == -1):
+                        #self.rotate_left()
+                    #if (self.ai_move_dir == 0):
+                        #self.rotate_stop()
+                    #if (self.ai_move_dir == 1):
+                        #self.rotate_right()
+
+                # if lander is pointing at closest lander then fire
+                elif (closest_lander_num >= 0) and (shortest_lander_distance < shortest_meteor_distance):
+
+                    quadrant = 0
+                    if landers[closest_lander_num].y < self.y and landers[closest_lander_num].x > self.x:
+                        quadrant = 1
+                    if landers[closest_lander_num].y < self.y and landers[closest_lander_num].x < self.x:
+                        quadrant = 2
+                    if landers[closest_lander_num].y > self.y and landers[closest_lander_num].x < self.x:
+                        quadrant = 3
+                    if landers[closest_lander_num].y > self.y and landers[closest_lander_num].x > self.x:
+                        quadrant = 4
+                    other_lander_angle = 0
+                    if abs(landers[closest_lander_num].x - self.x) != 0:
+                        other_lander_angle = atan(abs((landers[closest_lander_num].y - self.y)) / abs((landers[closest_lander_num].x - self.x))) * (180 / Pi)
+                    other_lander_actual_angle = 0
+                    lander_actual_angle = ((self.theta * (180 / Pi)) -90)%360
+                    if quadrant == 4:
+                        other_lander_actual_angle = other_lander_angle
+                    if quadrant == 3:
+                        other_lander_actual_angle = 90 + (90 - other_lander_angle)
+                    if quadrant == 2:
+                        other_lander_actual_angle = other_lander_angle + 180
+                    if quadrant == 1:
+                        other_lander_actual_angle = 270 + (90 - other_lander_angle)
+                    #print("lander angle=" + str(lander_actual_angle) + ", meteor angle=" + str(meteor_actual_angle))
+
+                    if (other_lander_actual_angle > lander_actual_angle):
+                        turn_result = (other_lander_actual_angle - lander_actual_angle)
+                    if (other_lander_actual_angle < lander_actual_angle):
+                        turn_result = ((other_lander_actual_angle + 360) - lander_actual_angle)
+                    
+                    if (turn_result > 180):
+                        self.rotate_left()
+                    if (turn_result < 180):
+                        self.rotate_right()
+                        
+                    angle_fudge = 1  # set at 1/360 off on either side
+                    if (lander_actual_angle >= (other_lander_actual_angle - angle_fudge)):
+                        if (lander_actual_angle <= (other_lander_actual_angle + angle_fudge)):
+                            if (self.ai_fire_bullet_countdown <= 0):
+                                self.ai_move_dir = 0
+                                self.rotate_stop()
+                                fire_bullet(self.number)
+                                self.ai_fire_bullet_countdown = randint(100, 300)
+                
+                    # keep turning lander to point at closest meteor
+                    #if (self.ai_move_countdown <= 0):
+                        #if ((self.ai_move_dir == 0) and (turn_result > 0)):
+                            #self.ai_move_dir = -1
+                        #if ((self.ai_move_dir == 0) and (theta_result < 0)):
+                            #self.ai_move_dir = 1
+                        #self.ai_move_countdown = 100
+                    #if (self.ai_move_dir == -1):
+                        #self.rotate_left()
+                    #if (self.ai_move_dir == 0):
+                        #self.rotate_stop()
+                    #if (self.ai_move_dir == 1):
+                        #self.rotate_right()
+                else:
+                    self.ai_move_countdown = 0
+                    self.ai_move_dir == 0
+                    self.rotate_stop()
+
+                    
+            # AI level 2 - tracks closest meteor and fires on it, moves if meteor is behind it and can't turn in time
+            # AI level 3 - ?
+                    
+        def move(self, player_num):
+            self.x += self.vx
+            self.y += self.vy
+            self.theta += self.deltatheta
+            if (self.theta >= 2 * Pi):
+                self.theta -= 2 * Pi
+            if (self.theta < 0):
+                self.theta += 2 * Pi
+            if (self.thrust > 0):
+                self.vx += self.thrust * cos(self.theta-Pi/2)/20
+                self.vy += self.thrust * sin(self.theta-Pi/2)/20
+            if self.x>X_MAX:
+                self.x=0
+            if self.x<0:
+                self.x=X_MAX
+            if self.y>Y_MAX:
+                self.y=0
+            if self.y<0:
+                self.y=Y_MAX
+            if self.vx > 1:
+                self.vx = 1
+            if self.vy > 1:
+                self.vy = 1
+            if self.vx < -1:
+                self.vx = -1
+            if self.vy < -1:
+                self.vy = -1
+            if self.on == True:
+                self.draw()
+                if (self.thrust > 0):
+                    flamex1 = self.x + cos(self.theta+Pi/2) * self.radius * 0.75
+                    flamey1 = self.y + sin(self.theta+Pi/2) * self.radius * 0.75
+                    flamex2 = self.x + cos(self.theta+Pi/2) * self.radius * 1.4
+                    flamey2 = self.y + sin(self.theta+Pi/2) * self.radius * 1.4
+                    c.delete(self.flame)
+                    self.flame = c.create_line(flamex1, flamey1, flamex2, flamey2, fill = "#FF4400", width = 8)
+            if self.spawn_protection_timer > 0:
+                self.spawn_protection_timer = self.spawn_protection_timer - 1
+            if self.spawn_protection_timer <= 0:
+                global n_bullets
+                global max_bullets
+                if bullet_friendliness <= 2:
+                    for bullet in bullets:
+                        if bullet_friendliness == 2 and bullet.player_num != self.number:
+                            if bullet.x <= self.x + self.radius and bullet.x >= self.x - self.radius:
+                                if bullet.y <= self.y + self.radius and bullet.y >= self.y - self.radius:
+                                    self.dies()
+            global n_meteors
+            for meteor in meteors:
+                if meteor.on:
+                    if (meteor.x - meteor.radius) <= (self.x + self.radius) and (meteor.x + meteor.radius) >= (self.x - self.radius):
+                        if (meteor.y - meteor.radius) <= (self.y + self.radius) and (meteor.y + meteor.radius) >= (self.y - self.radius):
+                            if meteor.type == 0 or meteor.type == 1 or meteor.type == 8:
+                                if self.spawn_protection_timer <= 0:
+                                    self.dies()
+                            else:
+                                if meteor.type == 7:
+                                    meteor.type = randint(2, 6)
+                                if meteor.type == 2:
+                                    self.spawn_protection_timer += 3000
+                                    meteor.dies(self.number)
+                                if meteor.type == 3:
+                                    self.lives = self.lives + 1
+                                    meteor.dies(self.number)
+                                if meteor.type == 4:
+                                    if self.luck < 100:
+                                        self.luck = self.luck + 10
+                                    meteor.dies(self.number)
+                                if meteor.type == 5:
+                                    self.bullet_level += 1
+                                    self.difficulty_bullet_check()
+                                    meteor.dies(self.number)
+                                if meteor.type == 6:
+                                    self.bullet_powerup += 1
+                                    self.difficulty_bullet_check()
+                                    meteor.dies(self.number)
+                                # meteor.type 7 above
+                                # meteor.type 8 boss
+
+        def thrust_on(self):
+            self.thrust = 0.025
+        def thrust_off(self):
+            self.thrust = 0
+            c.delete(self.flame)
+        def rotate_left(self):
+            self.deltatheta = -.01
+        def rotate_right(self):
+            self.deltatheta = +.01
+        def rotate_stop(self):
+            self.deltatheta = 0
+
+#--------------------Bullet--------------------
+            
+    class Bullet:
+        def __init__(self, player_num, number, xinit, yinit, thetainit, vxinit, vyinit, radius):
+            self.points = 0
+            self.player_num = player_num
+            self.kills = 0
+            self.number = number
+            self.timer = 1500
+            self.x = xinit + (landers[player_num].radius * vxinit * 5)
+            self.y = yinit + (landers[player_num].radius * vyinit * 5)
+            self.theta = thetainit
+            self.vx = vxinit 
+            self.vy = vyinit 
+            self.radius = radius
+            self.deltatheta = 0
+            self.thrust = 0
+            self.flamex1 = 0
+            self.flamey1 = 0
+            self.flamex2 = 0
+            self.flamey2 = 0
+            coords = [5,40,5,-40,-5,-40,-5,40]
+            self.poly = c.create_polygon(coords, outline = "Red", fill = "Red", width = 1)
+            self.flame = c.create_line(1, 1, 2, 2, fill = "black")
+            self.xy = []
+            self.rt = []
+            for i in range(0, len(coords), 2):
+                x = coords[i]
+                y = coords[i+1]
+                r = sqrt(x**2 + y**2) * self.radius / 64
+                t = atan2(y, x)
+                self.rt.append(r)
+                self.rt.append(t)
+        def dies(self):
+            global n_bullets
+            c.delete(self.poly)
+            bullet_index = self.number
+            bullets.pop(bullet_index)
+            landers[self.player_num].n_bullets = landers[self.player_num].n_bullets - 1
+            n_bullets -= 1
+            max_bullets = len(bullets)
+            for bullet_i in range(bullet_index, max_bullets):
+                bullets[bullet_i].number = bullets[bullet_i].number - 1
+
+        def draw(self):
+            self.xy =[]
+            for i in range(0, len(self.rt), 2):
+                r = self.rt[i]
+                t = self.rt[i+1]
+                self.xy.append(self.x + r*cos(t + self.theta))
+                self.xy.append(self.y + r*sin(t+ self.theta))
+            c.delete(self.poly)
+            #c.delete(self.points)
+            self.poly = c.create_polygon(self.xy, outline ="Red", fill = "Red", width = 2)
+            #score_text = str(self.number)
+            #self.points = c.create_text(self.x, self.y, text = score_text, font = ("bold", 10), fill = "white")
+        def move(self):
+            self.vy += 0.00
+            self.x += self.vx
+            self.y += self.vy
+            self.theta += self.deltatheta
+            if (self.thrust > 0):
+                self.vx += self.thrust * cos(self.theta-Pi/2)
+                self.vy += self.thrust * sin(self.theta-Pi/2)
+            if self.x>X_MAX:
+                self.x = 0
+            if self.x < 0:
+                self.x = X_MAX
+            if self.y > Y_MAX:
+                self.y = 0
+            if self.y < 0:
+                self.y = Y_MAX
+            global n_bullets
+            if self.timer <= 0:
+                self.dies()     
+            else:
+                self.timer = self.timer - 1
+        def thrust_on(self):
+            self.thrust = 0.025
+        def thrust_off(self):
+            self.thrust = 0
+            c.delete(self.flame)
+        def rotate_left(self):
+            self.deltatheta = -.01
+        def rotate_right(self):
+            self.deltatheta = +.01
+        def rotate_stop(self):
+            self.deltatheta = 0
+
+#--------------------Meteor--------------------
+            
+    class Meteor:
+        def __init__(self, number, xinit, yinit, thetainit, vxinit, vyinit, radius, mtype):
+            global debug_mode
+            if not powerups and mtype >= 1 and mtype <= 7:
+                self.type = 0
+            else:
+                self.type = mtype
+            self.poly_dup_x_left = 0
+            self.poly_dup_x_right = 0
+            self.poly_dup_y_up = 0
+            self.poly_dup_y_down = 0
+            global n_meteors
+            self.number = number
+            global radius_max
+            if mtype != 8:
+                self.points = 10 + (radius_max - radius)
+            else:
+                self.points = radius
+            self.points_text = 0
+            self.hitbox = 0
+            self.on = True
+            self.x = xinit
+            self.y = yinit
+            self.theta = thetainit
+            self.vx = vxinit
+            self.vy = vyinit
+            #if debug_mode == True:
+            #self.vx = 0
+            #self.vy = 0
+            self.radius = radius
+            self.deltatheta = 0
+            self.thrust = 0
+            self.flamex1 = 0
+            self.flamey1 = 0
+            self.flamex2 = 0
+            self.flamey2 = 0
+            coords = [50,50,50,-50,-50,-50,-50,50]
+            self.poly = c.create_oval(30,30,50,50, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+            self.flame = c.create_line(1, 1, 2, 2, fill = "black")
+            self.xy = []
+            self.rt = []
+            global game_level
+            for i in range(0, len(coords), 2):
+                x = coords[i]
+                y = coords[i+1]
+                r = sqrt(x**2 + y**2) * self.radius / 64
+                t = atan2(y, x)
+                self.rt.append(r)
+                self.rt.append(t)
+            if self.number == 0:
+                if game_level % 10 != 0:
+                    self.type = 1
+                    self.radius = randint(ceil((radius_min + radius_max)/2), radius_max)
+                else:
+                    self.type = 8
+            else:
+                if self.radius > (radius_min + radius_max)/2:
+                    if randint(1,10) == 1:
+                        self.type = 1
+            #print ("Created meteor #" + str(self.number) + " of " + str(n_meteors) + "")
+            n_meteors += 1
+        def dies(self, player_num):
+            global n_meteors
+            #print ("Destroyed meteor #" + str(self.number) + " of " + str(n_meteors) + "")
+            self.on = False
+            if self.poly_dup_x_left:
+                c.delete(self.poly_dup_x_left)
+                self.poly_dup_x_left = 0
+            if self.poly_dup_x_right:
+                c.delete(self.poly_dup_x_right)
+                self.poly_dup_x_right = 0
+            if self.poly_dup_y_up:
+                c.delete(self.poly_dup_y_up)
+                self.poly_dup_y_up = 0
+            if self.poly_dup_y_down:
+                c.delete(self.poly_dup_y_down)
+                self.poly_dup_y_down = 0
+            c.delete(self.poly)
+            c.delete(self)
+            score_tables[player_num].draw(player_num, landers[player_num])
+            meteor_index = self.number
+            meteor_radius = self.radius
+            #print(meteor_index)
+            meteor_type = self.type
+            meteor_x = self.x
+            meteor_y = self.y
+            try:
+                meteors.pop(meteor_index)
+            except:
+                print("Meteor #" + str(meteor_index) + " does not exist!")
+                print("  Attempting to re-adjust...")
+                while (meteor_index > n_meteors):
+                    try:
+                        meteors.pop(meteor_index)
+                    except:
+                        print("     adjusting...")
+                        meteor_index -= 1
+            n_meteors -= 1
+            for meteor_i in range(meteor_index, n_meteors):
+                meteors[meteor_i].number = meteors[meteor_i].number - 1
+            if meteor_radius > (radius_min + radius_max)/2:
+                if meteor_type == 0 or meteor_type == 1:
+                    meteor1_radius = randint(radius_min, meteor_radius - radius_min)
+                    meteor1_x = meteor_x + randint(-meteor_radius, meteor_radius)
+                    meteor1_y = meteor_y + randint(-meteor_radius, meteor_radius)
+                    meteor1_vx = randint(-20 ,20)/100
+                    meteor1_vy = randint(-20 ,20)/100
+                    meteor2_radius = randint(radius_min, meteor_radius - meteor1_radius)
+                    meteor2_x = meteor_x + randint(-meteor_radius, meteor_radius)
+                    meteor2_y = meteor_y + randint(-meteor_radius, meteor_radius)
+                    meteor2_vx = randint(-20 ,20)/100
+                    meteor2_vy = randint(-20 ,20)/100
+                    if meteor_type == 1:                                    
+                        meteors.append(Meteor(n_meteors, meteor1_x, meteor1_y, randint(1,359), meteor1_vx, meteor1_vy, radius_min, randint(2, 7)))      
+#                        meteors.append(Meteor(n_meteors, meteor1_x, meteor1_y, randint(1,359), meteor1_vx, meteor1_vy, radius_min, randint(5, 6)))      
+                    else:
+                        meteors.append(Meteor(n_meteors, meteor1_x, meteor1_y, randint(1,359), meteor1_vx, meteor1_vy, meteor1_radius, 0))
+                    if meteor_type == 1:
+                        if landers[player_num].luck > randint(1, 100):
+                            if meteor2_radius > (radius_min + radius_max)/2:
+                                meteors.append(Meteor(n_meteors, meteor2_x, meteor2_y, randint(1,359), meteor2_vx, meteor2_vy, meteor2_radius, 1))
+                            else:
+                                meteors.append(Meteor(n_meteors, meteor2_x, meteor2_y, randint(1,359), meteor2_vx, meteor2_vy, radius_min, randint(2,7)))
+#                                meteors.append(Meteor(n_meteors, meteor2_x, meteor2_y, randint(1,359), meteor2_vx, meteor2_vy, radius_min, randint(5,6)))
+                        else:
+                            meteors.append(Meteor(n_meteors, meteor2_x, meteor2_y, randint(1,359), meteor2_vx, meteor2_vy, meteor2_radius, 0))
+                    else:
+                        meteors.append(Meteor(n_meteors, meteor2_x, meteor2_y, randint(1,359), meteor2_vx, meteor2_vy, meteor2_radius, 0))      
+        def draw(self):
+            self.xy =[]
+            for i in range(0, len(self.rt), 2):
+                r = self.rt[i]
+                t = self.rt[i+1]
+                self.xy.append(self.x + r*cos(t + self.theta))
+                self.xy.append(self.y + r*sin(t + self.theta))
+            if self.poly_dup_x_left:
+                c.delete(self.poly_dup_x_left)
+            if self.poly_dup_x_right:
+                c.delete(self.poly_dup_x_right)
+            if self.poly_dup_y_up:
+                c.delete(self.poly_dup_y_up)
+            if self.poly_dup_y_down:
+                c.delete(self.poly_dup_y_down)
+            c.delete(self.poly)
+            self.poly = c.create_oval(self.x - self.radius,self.y - self.radius,self.x + self.radius,self.y + self.radius, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+            c.delete(self.points_text)
+            # don't draw dupes of boss meteor
+            if self.type != 8:
+                meteor_x_left = self.x - self.radius
+                meteor_x_right = self.x + self.radius
+                meteor_y_up = self.y - self.radius
+                meteor_y_down = self.y + self.radius
+                if meteor_x_left < 0:
+                    self.poly_dup_x_left = c.create_oval((X_MAX + meteor_x_left + self.radius) - self.radius,self.y - self.radius,(X_MAX + meteor_x_left + self.radius) + self.radius, self.y + self.radius, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+                else:
+                    self.poly_dup_x_left = 0
+                if meteor_x_right > X_MAX:
+                    self.poly_dup_x_right = c.create_oval((0 + meteor_x_right - X_MAX - self.radius) - self.radius,self.y - self.radius,(0 + meteor_x_right - X_MAX - self.radius) + self.radius,self.y + self.radius, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+                else:
+                    self.poly_dup_x_right = 0
+                if meteor_y_up < 0:
+                    self.poly_dup_y_up = c.create_oval(self.x - self.radius,(Y_MAX + meteor_y_up + self.radius) - self.radius,self.x + self.radius,(Y_MAX + meteor_y_up + self.radius) + self.radius, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+                else:
+                    self.poly_dup_y_up = 0
+                if meteor_y_down > Y_MAX:
+                    self.poly_dup_y_down = c.create_oval(self.x - self.radius,(0 + meteor_y_down - Y_MAX - self.radius) - self.radius,self.x + self.radius,(0 + meteor_y_down - Y_MAX - self.radius) + self.radius, outline = meteor_color[self.type], fill = meteor_color[self.type], width = 2)
+                else:
+                    self.poly_dup_y_down = 0
+            #points_str = str(self.number) + "."    #Testing
+            if self.type == 0 or self.type == 1 or self.type == 8:
+                points_str = str(self.points)
+            else:
+                if self.type == 2:
+                    points_str = "()"
+                if self.type == 3:
+                    points_str = "♥"
+                if self.type == 4:
+                    points_str = "♣"
+                if self.type == 5:
+                    points_str = "=="
+                if self.type == 6:
+                    points_str = "=>"
+                if self.type == 7:
+                    points_str = "?"
+            self.points_text = c.create_text(self.x, self.y, text = points_str, font = ("bold", 10), fill = "black")
+            
+            
+        def move(self):
+            global n_meteors
+            global radius_min
+            global radius_max
+            self.vy += 0.00
+            self.x += self.vx
+            self.y += self.vy
+            self.theta += self.deltatheta
+            if (self.thrust > 0):
+                self.vx += self.thrust * cos(self.theta-Pi/2)
+                self.vy += self.thrust * sin(self.theta-Pi/2)
+            move_to_random_side = False
+            if self.type != 8 and self.x > X_MAX:
+                self.x = 0
+            else:
+                if self.type == 8 and self.x > X_MAX + self.radius:
+                    move_to_random_side = True
+            if self.type != 8 and self.x < 0:
+                self.x = X_MAX
+            else:
+                if self.type == 8 and self.x < 0 - self.radius:
+                    move_to_random_side = True
+            if self.type != 8 and self.y > Y_MAX:
+                self.y = 0
+            else:
+                if self.type == 8 and self.y > Y_MAX + self.radius:
+                    move_to_random_side = True
+            if self.type != 8 and self.y < 0:
+                self.y = Y_MAX
+            else:
+                if self.type == 8 and self.y < 0 - self.radius:
+                    move_to_random_side = True
+            if move_to_random_side:
+                random_side = randint(1,5)
+                # top
+                if random_side == 1:
+                    self.x = X_MAX / 2
+                    self.y = 0 - self.radius
+                    self.vx = 0
+                    self.vy = 1/100
+                # bottom
+                if random_side == 2:
+                    self.x = X_MAX / 2
+                    self.y = Y_MAX + self.radius
+                    self.vx = 0
+                    self.vy = -1/100
+                # left
+                if random_side == 3:
+                    self.x = 0 - self.radius
+                    self.y = Y_MAX / 2
+                    self.vx = 1/100
+                    self.vy = 0
+                # right
+                if random_side == 4:
+                    self.x = X_MAX + self.radius
+                    self.y = Y_MAX / 2
+                    self.vx = -1/100
+                    self.vy = 0
+                    
+
+            if self.on == True:
+                for bullet in bullets:
+                    if bullet.x <= self.x + self.radius and bullet.x >= self.x - self.radius:
+                        if bullet.y <= self.y + self.radius and bullet.y >= self.y - self.radius:
+                            if self.type < 8:
+                                if self.type <= 1 or bullet_friendliness < 4: 
+                                    bullet.kills = bullet.kills + 1
+                                    bullet.timer = bullet.timer - 100
+                                    landers[bullet.player_num].score =  landers[bullet.player_num].score + (bullet.kills * ((radius_max - self.radius) + 10))
+                                    landers[bullet.player_num].next_life_points = landers[bullet.player_num].next_life_points + (bullet.kills * ((radius_max - self.radius)+ 10))
+                                    score_tables[bullet.player_num].draw(bullet.player_num, landers[bullet.player_num])
+                                    self.dies(bullet.player_num)
+                            # bullet hits boss type
+                            if self.type == 8:
+                                bullet.kills = bullet.kills + 1
+                                bullet.timer = 0
+                                landers[bullet.player_num].score =  landers[bullet.player_num].score + (bullet.kills * (self.radius))
+                                landers[bullet.player_num].next_life_points = landers[bullet.player_num].next_life_points + (bullet.kills * (self.radius))
+                                score_tables[bullet.player_num].draw(bullet.player_num, landers[bullet.player_num])
+                                self.radius -= 1
+                                if self.radius <= radius_max:
+                                    self.type = 1
+                                else:
+                                    #spawn off meteors from boss
+                                    meteor1_x = self.x + randint(-1 * self.radius, self.radius)
+                                    meteor1_y = self.y + randint(-1 * self.radius, self.radius)  # bullet.y not working?
+                                    meteor1_vx = randint(-20,20)/100 # * bullet.vx
+                                    meteor1_vy = randint(-20,20)/100 # * bullet.vy
+                                    meteor_type_random = randint(1, 3)
+                                    if meteor_type_random == 0 or meteor_type_random == 1:
+                                        meteor_type = 0
+                                        meteor_radius = randint(radius_min, radius_max)
+                                    if meteor_type_random == 2:
+                                        meteor_type = 1
+                                        #needs to be big enough to be a yellow, but not bigger than half the boss current size
+                                        if radius_max < ceil(self.radius / 2):
+                                            radius_max_temp = radius_max
+                                        else:
+                                            radius_max_temp = ceil(self.radius / 2)
+                                        if radius_max_temp < ceil((radius_min + radius_max)/2):
+                                            meteor_radius = ceil((radius_min + radius_max)/2)
+                                        else:
+                                            meteor_radius = randint(ceil((radius_min + radius_max)/2), radius_max_temp)
+                                        if meteor_radius < ceil((radius_min + radius_max/2)):
+                                            meteor_type = 0
+                                    if meteor_type_random == 3:
+                                        meteor_type = randint(2,7)
+                                        meteor_radius = radius_min
+                                    meteors.append(Meteor(n_meteors, meteor1_x, meteor1_y, randint(1,359), meteor1_vx, meteor1_vy, meteor_radius, meteor_type))
+
+        def thrust_on(self):
+            self.thrust = 0.0125
+        def thrust_off(self):
+            self.thrust = 0
+            c.delete(self.flame)
+        def rotate_left(self):
+            self.deltatheta = -.01
+        def rotate_right(self):
+            self.deltatheta = +.01
+        def rotate_stop(self):
+            self.deltatheta = 0
+
+#--------------------Level Table--------------------
+
+    class Level_Table:
+        def __init__(self, xinit, yinit, game_level):
+            self.x = xinit
+            self.y = yinit
+            self.game_level = game_level
+        def draw(self):
+            global game_level
+            level_text = "L: " + str(self.game_level)     
+            level_table = c.create_text(self.x, self.y, text = level_text, font = ("bold", 10), fill = "white")
+            c.delete(level_table)
+
+#--------------------Score Table--------------------
+
+    class Score_Table:
+        def __init__(self, xinit, yinit):
+            self.x = xinit
+            self.y = yinit
+            self.score_board = 0
+#        def draw(self, player_num, score, lives, shield, bullets, weapon_level, luck):
+        def draw(self, player_num, Lander):
+            c.delete(self.score_board)
+            score_text = "P"+str(player_num + 1)
+            score_text += "  Score: " + str(Lander.score)
+            score_text += "  ♥: " + str(Lander.lives)
+            score_text += "  (): " + str(Lander.spawn_protection_timer)
+            score_text += "  ==: " + str(Lander.max_bullets)
+            score_text += "  =>: " + str(Lander.bullet_powerup)
+            score_text += "  ♣: " + str(Lander.luck)
+            self.score_board = c.create_text(self.x, self.y, text = score_text, font = ("bold", 10), fill = "white")
+
+#--------------------Game Over Sign--------------------
+
+    class Gameover:
+        def __init__(self, xinit, yinit):
+            self.on = False
+            self.x = xinit
+            self.y = yinit
+        def draw(self):
+            self.gameover = c.create_text(self.x, self.y, text = "GAME OVER", font = ("bold", 50), fill = "red")
+        def remove(self):
+            c.delete(self.gameover)
+
+#--------------------Functions--------------------
+
+    def fire_bullet(num_player):
+        global n_bullets
+        global max_bullets
+        global bullet
+        if landers[num_player].on:
+            if landers[num_player].n_bullets < landers[num_player].max_bullets:
+                #middle
+                landers[num_player].n_bullets = landers[num_player].n_bullets + 1
+                n_bullets += 1
+                bullets.append(Bullet(num_player, n_bullets - 1, landers[num_player].x, landers[num_player].y, landers[num_player].theta, -(2 * cos(landers[num_player].theta+Pi/2)/5), -(2 * sin(landers[num_player].theta+Pi/2)/5), 20))
+                bullet_angle_min = 0
+                bullet_angle_max = .75
+                for bullet_i in range(0, (landers[num_player].bullet_powerup)):
+                    extra_bullet_angle = (bullet_i + 1) * bullet_angle_max / landers[num_player].bullet_powerup
+                    #right side
+                    if landers[num_player].n_bullets < landers[num_player].max_bullets:
+                        landers[num_player].n_bullets = landers[num_player].n_bullets + 1
+                        n_bullets += 1
+                        bullets.append(Bullet(num_player, n_bullets - 1, landers[num_player].x, landers[num_player].y, landers[num_player].theta + (extra_bullet_angle), -(2 * cos(landers[num_player].theta+Pi/2 + extra_bullet_angle)/5), -(2 * sin(landers[num_player].theta+Pi/2 + extra_bullet_angle)/5), 20))
+                    #left side
+                    if landers[num_player].n_bullets < landers[num_player].max_bullets:
+                        landers[num_player].n_bullets = landers[num_player].n_bullets + 1
+                        n_bullets += 1
+                        bullets.append(Bullet(num_player, n_bullets - 1, landers[num_player].x, landers[num_player].y, landers[num_player].theta - (extra_bullet_angle), -(2 * cos(landers[num_player].theta+Pi/2 - extra_bullet_angle)/5), -(2 * sin(landers[num_player].theta+Pi/2 - extra_bullet_angle)/5), 20))
+
+    def left_turn(event, num_player):
+        landers[num_player].rotate_left()
+    def right_turn(event, num_player):
+        landers[num_player].rotate_right()
+    def stop_turn(event, num_player):
+        landers[num_player].rotate_stop()
+    def thrust(event, num_player):
+        landers[num_player].thrust_on()
+    def coast(event, num_player):
+        landers[num_player].thrust_off()
+    def call_bullet(event, num_player):
+        fire_bullet(num_player)
+        
+    def dies(event):
+        landers[0].dies()
+
+    def reset(event):
+        global game_level
+        game_level = 1
+        for n_players in range(0, max_players):
+            landers[n_players].score = 0
+            landers[n_players].lives = 3
+            landers[n_players].reset()
+        meteors.clear()
+        n_meteors = 0
+        c.delete("all")
+
+        gameover.on = False
+        for n_players in range(0, max_players):
+            landers[n_players].on = True
+            score_table.draw(landers[n_players].score, landers[n_players].lives, landers[n_players].shield)
+        gameover.remove()
+        stop_turn(event)
+        max_meteors = 4 + game_level
+        for i in range (0, max_meteors):
+            meteors.append(Meteor(i, randint(0,X_MAX), randint(0,Y_MAX), randint(1,359),randint(-20,20)/100 ,randint(-20,20)/100,randint(10,40), 0))
+
+    def debug_move(event, x, y): 
+        meteors[0].x += x
+        meteors[0].y += y
+
+#--------------------Main Game Loop--------------------
+
+    def update_game():
+        global meteors
+        global n_meteors
+        global max_meteors
+        global radius_max
+        global game_level
+        for b in bullets:
+            b.move()
+        n_players = 0
+        for m in meteors:
+            m.move()
+        for l in landers:
+            n_players += 1
+            if ((l.ai_level >= 0) and (l.on)):
+                l.ai()
+            l.move(n_players)
+        for b in bullets:
+            b.draw()
+        for m in meteors:
+            m.draw()
+        for l in landers:
+            l.draw()
+        total_lives = 0
+        for n_players in range(0, max_players):
+            if landers[n_players].next_life_points >= 10000:
+                landers[n_players].next_life_points = landers[n_players].next_life_points - 10000
+                landers[n_players].extra_life()
+            total_lives += landers[n_players].lives
+            
+        # check if no more meteors, move to next level    
+        if n_meteors <= 0:
+            for n_players in range(0, max_players):
+                landers[n_players].spawn_protection_timer += 1500
+            game_level = game_level + 1
+            radius_max = 40 + game_level * game_difficulty
+            meteors = []
+            if (game_level % 10 == 0):
+                max_meteors = 1
+                boss_radius = game_level * 10
+                meteors.append(Meteor(0, X_MAX / 2, 10 - boss_radius, randint(1,359), 0, 1/100, boss_radius, 8))
+            else:
+                max_meteors = 4 + game_level
+                if game_difficulty == 5:
+                    max_meteors *= 2
+                #debug_mode
+                #max_meteors = 1
+                for i in range (0, max_meteors):
+                    meteors.append(Meteor(i, randint(0,X_MAX), randint(0,Y_MAX), randint(1,359),randint(-20,20)/100 ,randint(-20,20)/100,randint(radius_min,radius_max), 0))
+        if (total_lives <= 0):
+            if gameover.on == False:
+                gameover.draw()
+                gameover.on = True
+        
+        if gameover.on:
+            for n_players in range(0, max_players):
+                landers[n_players].rotate_left()
+        level_table.draw()        
+        for n_players in range(0, max_players):
+            score_tables[n_players].draw(n_players, landers[n_players])
+        c.after(1,update_game)
+
+    #player 1
+    #c.unbind('<KeyPress-a>')
+    #c.unbind('<KeyPress-d>')
+    #c.unbind('<KeyRelease-a>')
+    #c.unbind('<KeyRelease-d>')
+    #c.unbind('<KeyPress-w>')
+    #c.unbind('<KeyRelease-w>')
+    #c.unbind('<KeyRelease-v>')
+    #if max_players > 1:
+        #player 2
+        #c.unbind('<KeyPress-Left>')
+        #c.unbind('<KeyPress-Right>')
+        #c.unbind('<KeyRelease-Left>')
+        #c.unbind('<KeyRelease-Right>')
+        #c.unbind('<KeyPress-Up>')
+        #c.unbind('<KeyRelease-Up>')
+        #c.unbind('<KeyRelease-0>')
+        #if max_players > 2:
+            #player 3
+            #c.unbind('<KeyPress-j>')
+            #c.unbind('<KeyPress-l>')
+            #c.unbind('<KeyRelease-j>')
+            #c.unbind('<KeyRelease-l>')
+            #c.unbind('<KeyPress-i>')
+            #c.unbind('<KeyRelease-i>')
+            #c.unbind('<KeyRelease-n>')
+            #if max_players > 3:
+                #player 4
+                #c.bind('<KeyPress-4>')
+                #c.bind('<KeyPress-6>')
+                #c.bind('<KeyRelease-4>')
+                #c.bind('<KeyRelease-6>')
+                #c.bind('<KeyPress-8>')
+                #c.bind('<KeyRelease-8>')
+                #c.bind('<KeyRelease-3>')
+    
+    root = Tk()
+    c = Canvas(root, width = X_MAX, height = Y_MAX, bg = "Black")
+    c.pack()
+    #player 1
+    c.bind_all('<KeyPress-a>', lambda event, num_player = 0: left_turn(event, num_player))
+    c.bind_all('<KeyPress-d>', lambda event, num_player = 0: right_turn(event, num_player))
+    c.bind_all('<KeyRelease-a>', lambda event, num_player = 0: stop_turn(event, num_player))
+    c.bind_all('<KeyRelease-d>', lambda event, num_player = 0: stop_turn(event, num_player))
+    c.bind_all('<KeyPress-w>', lambda event, num_player = 0: thrust(event, num_player))
+    c.bind_all('<KeyRelease-w>', lambda event, num_player = 0: coast(event, num_player))
+    c.bind_all('<KeyRelease-v>', lambda event, num_player = 0: call_bullet(event, num_player))
+    if max_players > 1:
+        #player 2
+        c.bind_all('<KeyPress-Left>', lambda event, num_player = 1: left_turn(event, num_player))
+        c.bind_all('<KeyPress-Right>', lambda event, num_player = 1: right_turn(event, num_player))
+        c.bind_all('<KeyRelease-Left>', lambda event, num_player = 1: stop_turn(event, num_player))
+        c.bind_all('<KeyRelease-Right>', lambda event, num_player = 1: stop_turn(event, num_player))
+        c.bind_all('<KeyPress-Up>', lambda event, num_player = 1: thrust(event, num_player))
+        c.bind_all('<KeyRelease-Up>', lambda event, num_player = 1: coast(event, num_player))
+        c.bind_all('<KeyRelease-0>', lambda event, num_player = 1: call_bullet(event, num_player))
+        if max_players > 2:
+            #player 3
+            c.bind_all('<KeyPress-j>', lambda event, num_player = 2: left_turn(event, num_player))
+            c.bind_all('<KeyPress-l>', lambda event, num_player = 2: right_turn(event, num_player))
+            c.bind_all('<KeyRelease-j>', lambda event, num_player = 2: stop_turn(event, num_player))
+            c.bind_all('<KeyRelease-l>', lambda event, num_player = 2: stop_turn(event, num_player))
+            c.bind_all('<KeyPress-i>', lambda event, num_player = 2: thrust(event, num_player))
+            c.bind_all('<KeyRelease-i>', lambda event, num_player = 2: coast(event, num_player))
+            c.bind_all('<KeyRelease-n>', lambda event, num_player = 2: call_bullet(event, num_player))
+            if max_players > 3:
+                #player 4
+                c.bind_all('<KeyPress-4>', lambda event, num_player = 3: left_turn(event, num_player))
+                c.bind_all('<KeyPress-6>', lambda event, num_player = 3: right_turn(event, num_player))
+                c.bind_all('<KeyRelease-4>', lambda event, num_player = 3: stop_turn(event, num_player))
+                c.bind_all('<KeyRelease-6>', lambda event, num_player = 3: stop_turn(event, num_player))
+                c.bind_all('<KeyPress-8>', lambda event, num_player = 3: thrust(event, num_player))
+                c.bind_all('<KeyRelease-8>', lambda event, num_player = 3: coast(event, num_player))
+                c.bind_all('<KeyRelease-3>', lambda event, num_player = 3: call_bullet(event, num_player))
+
+    c.bind_all('<KeyPress-k>', dies)
+    c.bind_all('<KeyPress-r>', reset)
+
+    c.bind_all('<KeyPress-\>', lambda event, x = 0, y = 1: debug_move(event, x, y))
+    c.bind_all('<KeyPress-=>', lambda event, x = 0, y = -1: debug_move(event, x, y))
+    c.bind_all('<KeyPress-[>', lambda event, y = 0, x = -1: debug_move(event, x, y))
+    c.bind_all('<KeyPress-]>', lambda event, y = 0, x = 1: debug_move(event, x, y))
+
+    game_level = game_level_select - 1
+    level_table = Level_Table(0, 20, game_level)
+
+    landers = []
+    score_tables = []
+    if max_players < 4:
+        for n_players in range(0, max_players):
+            landers.append(Lander(n_players, ai_level[n_players], (n_players + 1) * (X_MAX / (max_players + 1)), Y_MAX / 2, 0, 0, 0, 20))
+            score_tables.append(Score_Table((n_players + 1) * (X_MAX / (max_players + 1)), 20))
+    else:
+        if max_players == 4:
+            #n_player 0
+            landers.append(Lander(0,ai_level[0],1 * (X_MAX / 3), 1 * Y_MAX / 3, 0, 0, 0, 20))
+            score_tables.append(Score_Table(1 * (X_MAX / 3), 20))
+            #n_player 1
+            landers.append(Lander(1,ai_level[1],2 * (X_MAX / 3), 1 * Y_MAX / 3, 0, 0, 0, 20))
+            score_tables.append(Score_Table(2 * (X_MAX / 3), 20))
+            #n_player 2
+            landers.append(Lander(2,ai_level[2],1 * (X_MAX / 3), 2 * Y_MAX / 3, 0, 0, 0, 20))
+            score_tables.append(Score_Table(1 * (X_MAX / 3), Y_MAX - 20))
+            #n_player 3
+            landers.append(Lander(3,ai_level[3],2 * (X_MAX / 3), 2 * Y_MAX / 3, 0, 0, 0, 20))
+            score_tables.append(Score_Table(2 * (X_MAX / 3), Y_MAX - 20))
+
+    gameover = Gameover(X_MAX/2, Y_MAX/2) 
+    bullets = []
+    n_bullets = 0
+    meteors = []
+    
+    n_meteors = 0
+    c.pack()
+    c.after(100,update_game)
+    mainloop()
+"
