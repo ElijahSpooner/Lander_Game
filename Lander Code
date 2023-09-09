@@ -1,4 +1,4 @@
-"
+
 from tkinter import*
 from math import*
 from time import*
@@ -1415,4 +1415,3 @@ while not(quit_game):
     c.pack()
     c.after(100,update_game)
     mainloop()
-"
